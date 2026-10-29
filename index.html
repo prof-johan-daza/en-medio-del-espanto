@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Poesía</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400;1,500&family=Inter:wght@400;500;600&family=Playwrite+FR+Moderne:wght@200&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f6f1e7; --paper:#fffdf8; --ink:#2a2420; --muted:#7a6d62; --line:#e4dacb;
+    --accent:#9c3d2e; --accent-soft:#f3e1da; --shadow:0 1px 2px rgba(60,40,20,.06),0 6px 18px rgba(60,40,20,.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#1c1917; --paper:#26211e; --ink:#efe7dc; --muted:#a89a8c; --line:#3a332e;
+      --accent:#e08a74; --accent-soft:#3a2722; --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 18px rgba(0,0,0,.25);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#1c1917; --paper:#26211e; --ink:#efe7dc; --muted:#a89a8c; --line:#3a332e;
+    --accent:#e08a74; --accent-soft:#3a2722; --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 18px rgba(0,0,0,.25);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-size:15px;line-height:1.5}
+  .wrap{max-width:1100px;margin:0 auto;padding:0 16px}
+  header{padding:48px 0 24px;text-align:center}
+  header h1{font-family:"Cormorant Garamond",Georgia,serif;font-weight:600;font-size:clamp(2.4rem,6vw,3.6rem);margin:0;letter-spacing:.01em}
+  header p{color:var(--muted);margin:6px 0 0}
+  .controls{position:sticky;top:0;z-index:5;background:var(--bg);padding:12px 0;border-bottom:1px solid var(--line);
+    display:grid;grid-template-columns:1fr auto auto auto;gap:8px}
+  .controls[hidden]{display:none}
+  .controls input,.controls select,.controls button{font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--line);
+    border-radius:10px;padding:9px 12px;min-width:0}
+  .controls input:focus,.controls select:focus{outline:2px solid var(--accent);outline-offset:-1px}
+  .btn{cursor:pointer;font-weight:500}
+  .btn:hover{border-color:var(--accent);color:var(--accent)}
+  @media (max-width:720px){.controls{grid-template-columns:1fr 1fr}.controls input{grid-column:1/-1}.controls .btn{grid-column:1/-1}}
+  .count{color:var(--muted);font-size:13px;margin:14px 0 6px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px;padding-bottom:64px}
+  .card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:18px 18px 14px;box-shadow:var(--shadow);
+    cursor:pointer;text-align:left;font:inherit;color:inherit;display:flex;flex-direction:column;gap:8px;transition:transform .15s,border-color .15s}
+  .card:hover,.card:focus-visible{transform:translateY(-2px);border-color:var(--accent);outline:none}
+  .author{font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:600}
+  .card h2{font-family:"Cormorant Garamond",Georgia,serif;font-size:1.5rem;line-height:1.15;margin:0;font-weight:600}
+  .excerpt{font-family:"Cormorant Garamond",Georgia,serif;font-style:italic;font-size:1.08rem;color:var(--muted);margin:0;flex:1}
+  .meta{font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:8px}
+  .empty,.loader{text-align:center;color:var(--muted);padding:48px 0}
+  .loader label{display:inline-block;margin-top:12px;cursor:pointer;color:var(--accent);border:1px dashed var(--accent);border-radius:12px;padding:16px 22px}
+  .loader input{display:none}
+  dialog{border:none;padding:0;background:transparent;max-width:min(680px,calc(100vw - 24px));width:100%;max-height:calc(100vh - 24px)}
+  dialog::backdrop{background:rgba(20,14,10,.55)}
+  .sheet{background:var(--paper);color:var(--ink);border-radius:18px;padding:28px 28px 20px;position:relative;max-height:calc(100vh - 24px);overflow:auto}
+  .close{position:absolute;top:10px;right:12px;background:none;border:none;font-size:26px;color:var(--muted);cursor:pointer;line-height:1}
+  .close:hover{color:var(--accent)}
+  .sheet h2{font-family:"Cormorant Garamond",Georgia,serif;font-size:2rem;margin:4px 0 18px;line-height:1.1;padding-right:24px}
+  /* Police du corps des poèmes : Belle Allure Script2 Fin.
+     1) utilisée si elle est installée sur l'ordinateur ;
+     2) sinon, chargée depuis un fichier placé à côté de la page (pour la version en ligne). */
+  @font-face{
+    font-family:"Corps Poeme";
+    src: local("Belle Allure Script2 Fin"), local("BelleAllure Script2 Fin"), local("Belle Allure SC2 Fin"),
+         local("BelleAllureScript2Fin"), local("BelleAllureSC2Fin"),
+         url("BelleAllure-Script2-Fin.woff2") format("woff2"),
+         url("BelleAllure-Script2-Fin.ttf") format("truetype"),
+         url("BelleAllure-Script2-Fin.otf") format("opentype");
+    font-display:swap;
+  }
+  .poem{font-family:"Corps Poeme","Belle Allure Script2 Fin","Playwrite FR Moderne","Cormorant Garamond",Georgia,serif;font-size:1.25rem;line-height:1.9}
+  .poem p{margin:0 0 1em}
+  .nav{display:flex;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding-top:14px;margin-top:8px}
+  .nav button{font:inherit;font-size:13px;background:none;border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:7px 12px;cursor:pointer}
+  .nav button:hover{border-color:var(--accent);color:var(--accent)}
+  mark{background:var(--accent-soft);color:inherit;border-radius:3px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1 id="docTitle">Poesía</h1>
+    <p id="subtitle"></p>
+  </header>
+
+  <div class="controls" id="controls" hidden>
+    <input id="q" type="search" placeholder="Buscar un título, un autor, un verso…" aria-label="Buscar">
+    <select id="author" aria-label="Autor"><option value="">Todos los autores</option></select>
+    <select id="sort" aria-label="Orden">
+      <option value="file">Orden del archivo</option>
+      <option value="title">Título A–Z</option>
+      <option value="author">Autor A–Z</option>
+      <option value="short">Más cortos primero</option>
+      <option value="long">Más largos primero</option>
+    </select>
+    <button class="btn" id="random" type="button">Un poema al azar</button>
+  </div>
+
+  <div class="count" id="count"></div>
+  <main class="grid" id="grid"></main>
+
+  <div class="loader" id="loader">
+    <p>Cargando los poemas…</p>
+  </div>
+</div>
+
+<dialog id="dlg" aria-labelledby="dTitle">
+  <div class="sheet">
+    <button class="close" id="close" aria-label="Cerrar">×</button>
+    <div class="author" id="dAuthor"></div>
+    <h2 id="dTitle"></h2>
+    <div class="poem" id="dPoem"></div>
+    <div class="nav">
+      <button id="prev" type="button">← Anterior</button>
+      <button id="next" type="button">Siguiente →</button>
+    </div>
+  </div>
+</dialog>
+
+<script>
+// ---- Nom du fichier Markdown à placer à côté de cette page ----
+const MD_FILE = "poemas.md";
+
+const $ = id => document.getElementById(id);
+let poems = [], visible = [], current = -1;
+
+const strip = s => s.replace(/<!--[\s\S]*?-->/g, "").replace(/[*_]/g, "").trim();
+const fold = s => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+const MINOR = new Set(["de","del","la","las","los","y","e","da","di","van","von"]);
+function niceAuthor(raw){
+  const s = strip(raw).replace(/\s*\([^)]*\)\s*$/, "");
+  return s.toLocaleLowerCase("es").split(/\s+/).map((w,i) =>
+    i > 0 && MINOR.has(w) ? w : w.charAt(0).toLocaleUpperCase("es") + w.slice(1)).join(" ");
+}
+
+function parse(md){
+  const out = []; let author = "", cur = null, title = "Poesía";
+  for (const raw of md.replace(/\r/g, "").split("\n")){
+    if (/^#\s/.test(raw)) { title = strip(raw.slice(2)) || title; continue; }
+    if (/^##\s/.test(raw)) { author = niceAuthor(raw.slice(3)); cur = null; continue; }
+    if (/^###\s/.test(raw)) { cur = { title: strip(raw.slice(4)), author, lines: [] }; out.push(cur); continue; }
+    if (cur) cur.lines.push(raw.replace(/\s+$/, ""));
+  }
+  out.forEach((p, i) => {
+    const stanzas = []; let st = [];
+    for (const l of p.lines){
+      if (l.trim() === "") { if (st.length) stanzas.push(st), st = []; }
+      else st.push(l.trim());
+    }
+    if (st.length) stanzas.push(st);
+    p.stanzas = stanzas;
+    p.verses = stanzas.reduce((n, s) => n + s.length, 0);
+    p.excerpt = stanzas.flat().slice(0, 3);
+    p.index = i;
+    p.search = fold([p.title, p.author, stanzas.flat().join(" ")].join(" "));
+  });
+  return { title, poems: out };
+}
+
+function start(md){
+  const data = parse(md);
+  poems = data.poems;
+  document.title = data.title;
+  $("docTitle").textContent = data.title;
+  const authors = [...new Set(poems.map(p => p.author))].sort((a, b) => a.localeCompare(b, "es"));
+  $("subtitle").textContent = `${poems.length} poemas · ${authors.length} autores`;
+  for (const a of authors){ const o = document.createElement("option"); o.value = o.textContent = a; $("author").append(o); }
+  $("loader").hidden = true; $("controls").hidden = false;
+  render();
+  openFromHash();
+}
+
+function render(){
+  const q = fold($("q").value.trim()), a = $("author").value, s = $("sort").value;
+  visible = poems.filter(p => (!a || p.author === a) && (!q || p.search.includes(q)));
+  const cmp = {
+    file: (x, y) => x.index - y.index,
+    title: (x, y) => x.title.localeCompare(y.title, "es"),
+    author: (x, y) => x.author.localeCompare(y.author, "es") || x.index - y.index,
+    short: (x, y) => x.verses - y.verses,
+    long: (x, y) => y.verses - x.verses
+  }[s];
+  visible.sort(cmp);
+  $("count").textContent = visible.length === poems.length ? "" : `${visible.length} de ${poems.length} poemas`;
+  const grid = $("grid"); grid.innerHTML = "";
+  if (!visible.length){ grid.innerHTML = '<p class="empty" style="grid-column:1/-1">Ningún poema coincide con la búsqueda.</p>'; return; }
+  visible.forEach((p, i) => {
+    const b = document.createElement("button"); b.className = "card"; b.type = "button";
+    b.innerHTML = '<span class="author"></span><h2></h2><p class="excerpt"></p><span class="meta"></span>';
+    b.children[0].textContent = p.author;
+    b.children[1].textContent = p.title;
+    b.children[2].textContent = p.excerpt.join(" / ") + (p.verses > 3 ? " …" : "");
+    b.children[3].textContent = `${p.verses} versos`;
+    b.onclick = () => openPoem(i);
+    grid.append(b);
+  });
+}
+
+function openPoem(i){
+  if (i < 0 || i >= visible.length) return;
+  current = i; const p = visible[i];
+  $("dAuthor").textContent = p.author;
+  $("dTitle").textContent = p.title;
+  const box = $("dPoem"); box.innerHTML = "";
+  p.stanzas.forEach(st => {
+    const para = document.createElement("p");
+    st.forEach((l, k) => { if (k) para.append(document.createElement("br")); para.append(l); });
+    box.append(para);
+  });
+  $("prev").disabled = i === 0; $("next").disabled = i === visible.length - 1;
+  $("prev").style.visibility = i === 0 ? "hidden" : ""; $("next").style.visibility = i === visible.length - 1 ? "hidden" : "";
+  if (!$("dlg").open) $("dlg").showModal();
+  $("dlg").querySelector(".sheet").scrollTop = 0;
+  history.replaceState(null, "", "#poema-" + (p.index + 1));
+}
+function closePoem(){ $("dlg").close(); }
+function openFromHash(){
+  const m = location.hash.match(/^#poema-(\d+)$/); if (!m) return;
+  const i = visible.findIndex(p => p.index === +m[1] - 1); if (i >= 0) openPoem(i);
+}
+
+$("q").oninput = render; $("author").onchange = render; $("sort").onchange = render;
+$("random").onclick = () => visible.length && openPoem(Math.floor(Math.random() * visible.length));
+$("close").onclick = closePoem;
+$("prev").onclick = () => openPoem(current - 1);
+$("next").onclick = () => openPoem(current + 1);
+$("dlg").addEventListener("close", () => history.replaceState(null, "", location.pathname + location.search));
+$("dlg").addEventListener("click", e => { if (e.target === $("dlg")) closePoem(); });
+document.addEventListener("keydown", e => {
+  if (!$("dlg").open) return;
+  if (e.key === "ArrowLeft") openPoem(current - 1);
+  if (e.key === "ArrowRight") openPoem(current + 1);
+});
+
+// Chargement : le fichier à côté de la page, sinon choix manuel du fichier
+fetch(MD_FILE).then(r => { if (!r.ok) throw 0; return r.text(); }).then(start).catch(() => {
+  $("loader").innerHTML = '<p>No se encontró <code>' + MD_FILE + '</code> junto a esta página.</p>' +
+    '<label>Elegir el archivo de poemas (.md)<input type="file" id="pick" accept=".md,.txt,text/markdown,text/plain"></label>';
+  $("pick").onchange = e => { const f = e.target.files[0]; if (f) f.text().then(start); };
+});
+</script>
+</body>
+</html>
